@@ -7,27 +7,42 @@ using UnityEngine.UI;
 public class PlayerController : MonoBehaviour
 {
 
+    Animator anim;
+
     private Rigidbody2D rb2d;
     private int count;
+    private int life;
+
+    public AudioClip MusicClip;
+
+    public AudioClip MusicClip2;
+
+    public AudioSource MusicSource;
+
     public float speed;
     public float jumpForce;
+
+
     public Text countText;
     public Text winText;
+    public Text lifeText;
 
+    private bool facingRight = true;
 
-    // Start is called before the first frame update
+    
     void Start()
     {
+        anim = GetComponent<Animator> ();
         rb2d = GetComponent<Rigidbody2D>();
         count = 0;
+        life = 3;
         winText.text = "";
-        SetAllText();
+
+
+        
     }
 
-    private void SetAllText()
-    {
-        throw new NotImplementedException();
-    }
+ 
 
     void FixedUpdate()
         {
@@ -37,28 +52,88 @@ public class PlayerController : MonoBehaviour
             Application.Quit();
 
 
-        float moveHozizontal = Input.GetAxis("Horizontal");
+        float moveHorizontal = Input.GetAxis("Horizontal");
 
-            Vector2 movement = new Vector2(moveHozizontal, 0);
+            Vector2 movement = new Vector2(moveHorizontal, 0);
 
             rb2d.AddForce(movement * speed);
+
+
+
+        if (Input.GetKeyDown (KeyCode.LeftArrow))
+        {
+            anim.SetInteger("State", 1);
+        }
+
+        if (Input.GetKeyUp(KeyCode.LeftArrow))
+        {
+            anim.SetInteger("State", 0);
+        }
+
+
+        if (Input.GetKeyDown(KeyCode.RightArrow))
+        {
+            anim.SetInteger("State", 1);
+        }
+
+
+        if (Input.GetKeyUp(KeyCode.RightArrow))
+        {
+            anim.SetInteger("State", 0);
+        }
+
+        if (facingRight == false && moveHorizontal > 0)
+        {
+         Flip();
+}
+        else if (facingRight == true && moveHorizontal < 0)
+        {
+         Flip();
+        }
+    }
+
+    void Flip()
+    {
+        facingRight = !facingRight;
+        Vector2 Scaler = transform.localScale;
+        Scaler.x = Scaler.x * -1;
+        transform.localScale = Scaler;
     }
 
     void OnTriggerEnter2D(Collider2D other)
     {
+        if (count == 3)
+        {
+            transform.position = new Vector2(40.0f, transform.position.y);
+            life = 3;
+        }
+
         if (other.gameObject.CompareTag("Pickup"))
         {
             other.gameObject.SetActive(false);
             count = count + 1;
             SetAllText();
         }
+        else if (other.gameObject.CompareTag("Enemy"))
+        {
+            other.gameObject.SetActive(false);
+            life = life - 1;
+            SetAllText();
+        }
 
         void SetAllText()
         {
-            countText.text = "Count " + count.ToString();
-            if (count>= 4)
+            countText.text = "Count: " + count.ToString();
+            lifeText.text = "Lives:  " + life.ToString();
+            if (count>= 8)
             {
                 winText.text = "You Win!";
+                 MusicSource.clip = MusicClip2;
+               MusicSource.Play();
+            }
+            if (life == 0)
+            {
+                winText.text = "You Lose!";
             }
         }
     }
